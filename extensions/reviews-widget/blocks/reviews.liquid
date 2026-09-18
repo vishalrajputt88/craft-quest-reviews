@@ -1,0 +1,129 @@
+{%- comment -%}
+  Craft Quest Reviews — storefront block.
+  Markup mirrors the theme's cq-previews section exactly (same class names), so
+  the look is identical; only the data source changes (live, from the app).
+{%- endcomment -%}
+{{ 'cq-reviews.css' | asset_url | stylesheet_tag }}
+
+<div
+  class="cq-section-wrap cqr-root"
+  id="cq-reviews"
+  data-cqr
+  data-product-id="{{ product.id }}"
+  data-proxy="{{ shop.url }}/apps/reviews"
+  data-allow-images="{{ block.settings.allow_images }}"
+  data-write-label="{{ block.settings.button_label | escape }}"
+  {% if block.settings.cloud_name != blank %}data-cloud-name="{{ block.settings.cloud_name }}"{% endif %}
+  {% if block.settings.upload_preset != blank %}data-upload-preset="{{ block.settings.upload_preset }}"{% endif %}
+  style="--cq-pt:{{ block.settings.padding_top }}px; --cq-pb:{{ block.settings.padding_bottom }}px; --cq-bg:{{ block.settings.bg_color }}; --cqr-accent:{{ block.settings.accent }}; --cqr-star:{{ block.settings.star_color }};"
+  {{ block.shopify_attributes }}
+>
+  <section class="cq-section cq-previews">
+    <div class="cq-container cq-previews__layout">
+
+      {%- comment -%} Left: average score {%- endcomment -%}
+      <div class="cq-previews__summary">
+        <h2 class="cq-previews__title">{{ block.settings.heading }}</h2>
+        <div class="cq-previews__score">
+          <span class="cq-previews__avg" data-cqr-avg>0.0</span>
+          <span class="cq-stars cq-stars--gold cq-previews__stars" data-cqr-avg-stars></span>
+        </div>
+        <p class="cq-previews__based" data-cqr-based>Based on 0 reviews</p>
+        <button type="button" class="cq-btn cq-btn--gold cqr-write" data-cqr-open>{{ block.settings.button_label }}</button>
+      </div>
+
+      {%- comment -%} Middle: distribution bars {%- endcomment -%}
+      <ul class="cq-previews__bars" role="list" data-cqr-bars>
+        {%- for i in (1..5) -%}
+          {%- assign star = 6 | minus: i -%}
+          <li class="cq-previews__bar-row">
+            <span class="cq-previews__bar-label">{{ star }} <iconify-icon icon="mdi:star" width="13" height="13" class="cq-icon"></iconify-icon></span>
+            <span class="cq-previews__bar"><span style="width:0%"></span></span>
+            <span class="cq-previews__bar-pct">0%</span>
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      {%- comment -%} Right: review carousel {%- endcomment -%}
+      <div class="cq-previews__list" data-cqr-carousel>
+        <div class="cq-carousel__track cq-previews__track" data-cqr-track>
+          <p class="cq-previews__note" data-cqr-empty>Loading reviews…</p>
+        </div>
+        <button type="button" class="cq-carousel__arrow cq-previews__arrow cq-previews__arrow--prev" data-cqr-prev aria-label="Previous review" hidden>
+          <iconify-icon icon="mdi:chevron-left" width="22" height="22" class="cq-icon"></iconify-icon>
+        </button>
+        <button type="button" class="cq-carousel__arrow cq-previews__arrow cq-previews__arrow--next" data-cqr-next aria-label="Next review" hidden>
+          <iconify-icon icon="mdi:chevron-right" width="22" height="22" class="cq-icon"></iconify-icon>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} Write-a-review modal {%- endcomment -%}
+  <div class="cqr__modal" data-cqr-modal aria-hidden="true">
+    <div class="cqr__overlay" data-cqr-close></div>
+    <div class="cqr__panel" role="dialog" aria-modal="true" aria-label="{{ block.settings.form_heading | escape }}">
+      <button type="button" class="cqr__x" data-cqr-close aria-label="Close">&times;</button>
+      <h3>{{ block.settings.form_heading }}</h3>
+      <form data-cqr-form>
+        <input type="hidden" name="productId" value="{{ product.id }}">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="cqr__hp" aria-hidden="true">
+
+        <fieldset class="cqr__rate">
+          <legend>Your rating</legend>
+          <div class="cqr__rate-stars">
+            {%- for i in (1..5) -%}
+              {%- assign n = 6 | minus: i -%}
+              <input type="radio" name="rating" id="cqr-star-{{ block.id }}-{{ n }}" value="{{ n }}" required>
+              <label for="cqr-star-{{ block.id }}-{{ n }}" aria-label="{{ n }} stars">★</label>
+            {%- endfor -%}
+          </div>
+        </fieldset>
+
+        <label>Headline <input type="text" name="title" maxlength="120" placeholder="Sums it up in a few words"></label>
+        <label>Your review <textarea name="body" rows="5" required minlength="5" placeholder="What did you think?"></textarea></label>
+        <div class="cqr__row">
+          <label>Name <input type="text" name="authorName" required maxlength="80" value="{{ customer.first_name }}"></label>
+          <label>Email <input type="email" name="authorEmail" value="{{ customer.email }}" placeholder="Not shown publicly"></label>
+        </div>
+
+        {%- if block.settings.allow_images -%}
+          <label class="cqr__file">Photos (optional)
+            <input type="file" accept="image/*" multiple data-cqr-images>
+          </label>
+          <div class="cqr__previews" data-cqr-previews></div>
+          <input type="hidden" name="images" data-cqr-image-urls>
+        {%- endif -%}
+
+        <p class="cqr__msg" data-cqr-msg hidden></p>
+        <button type="submit" class="cqr__submit">{{ block.settings.submit_label }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="{{ 'cq-reviews.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Product reviews",
+  "target": "section",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Customer Reviews" },
+    { "type": "text", "id": "button_label", "label": "Write button", "default": "Write a review" },
+    { "type": "text", "id": "form_heading", "label": "Form heading", "default": "Write a review" },
+    { "type": "text", "id": "submit_label", "label": "Submit button", "default": "Submit review" },
+    { "type": "checkbox", "id": "allow_images", "label": "Allow photo uploads", "default": true },
+    { "type": "header", "content": "Photo uploads (Cloudinary)" },
+    { "type": "text", "id": "cloud_name", "label": "Cloud name" },
+    { "type": "text", "id": "upload_preset", "label": "Unsigned upload preset" },
+    { "type": "header", "content": "Style" },
+    { "type": "color", "id": "accent", "label": "Accent colour", "default": "#b8892b" },
+    { "type": "color", "id": "star_color", "label": "Star colour", "default": "#f5a623" },
+    { "type": "color", "id": "bg_color", "label": "Background", "default": "#ffffff" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 40 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 40 }
+  ]
+}
+{% endschema %}

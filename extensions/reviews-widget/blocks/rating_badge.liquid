@@ -1,0 +1,28 @@
+{%- comment -%}
+  Small star badge for product cards / above the title.
+  Reads the metafield the app writes, so it renders instantly with no JS.
+{%- endcomment -%}
+{%- assign r = product.metafields.reviews.rating.value -%}
+{%- assign c = product.metafields.reviews.rating_count.value -%}
+{%- if r != blank and c > 0 -%}
+  {{ 'cq-reviews.css' | asset_url | stylesheet_tag }}
+  <a href="#cqr-reviews" class="cqr-badge" style="--cqr-star: {{ block.settings.star_color }};">
+    <span class="cqr-badge__stars" aria-hidden="true">
+      {%- assign full = r.rating | floor -%}
+      {%- for i in (1..5) -%}
+        <span class="{% if i <= full %}is-on{% endif %}">★</span>
+      {%- endfor -%}
+    </span>
+    <span class="cqr-badge__text">{{ r.rating | round: 1 }} ({{ c }})</span>
+  </a>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Rating badge",
+  "target": "section",
+  "settings": [
+    { "type": "color", "id": "star_color", "label": "Star colour", "default": "#f5a623" }
+  ]
+}
+{% endschema %}

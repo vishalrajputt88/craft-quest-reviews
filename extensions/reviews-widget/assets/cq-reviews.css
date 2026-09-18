@@ -1,0 +1,139 @@
+/* ==========================================================================
+   Craft Quest Reviews — widget styles.
+
+   The reviews block below is copied verbatim from the theme's cq-product.css
+   so the widget looks identical to the theme section. Shared tokens and the
+   few carousel/button rules the widget needs are included too, so it still
+   looks right on a theme that doesn't have them.
+   ========================================================================== */
+
+.cqr-root {
+  --cq-gold: #b8892b;
+  --cq-gold-dark: #9c7222;
+  --cq-cream: #faf6f0;
+  --cq-sand: #f4ebdd;
+  --cq-ink: #1f1f1f;
+  --cq-muted: #6d6d6d;
+  --cq-line: #ebe4da;
+  --cq-shadow: 0 6px 18px rgba(40, 30, 10, 0.08);
+  --cq-container: 1400px;
+  --cq-gutter: clamp(16px, 4vw, 48px);
+}
+.cqr-root .cq-section { background: var(--cq-bg, transparent); padding-block: var(--cq-pt, 40px) var(--cq-pb, 40px); }
+.cqr-root .cq-container { width: 100%; max-width: var(--cq-container); margin-inline: auto; padding-inline: var(--cq-gutter); box-sizing: border-box; }
+.cqr-root *, .cqr-root *::before, .cqr-root *::after { box-sizing: border-box; }
+.cqr-root ul[role="list"] { list-style: none; margin: 0; padding: 0; }
+.cqr-root .cq-icon { display: inline-block; vertical-align: middle; flex: 0 0 auto; }
+.cqr-root .cq-stars { display: inline-flex; align-items: center; gap: 1px; color: #f5a623; }
+.cqr-root .cq-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; font-weight: 600; font-size: 14px; line-height: 1; padding: 13px 24px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; transition: background-color .18s ease, border-color .18s ease; }
+.cqr-root .cq-btn--gold { background: var(--cq-gold); color: #fff; border-color: var(--cq-gold); }
+.cqr-root .cq-btn--gold:hover { background: var(--cq-gold-dark); border-color: var(--cq-gold-dark); }
+.cqr-root .cq-carousel__track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; scroll-behavior: smooth; padding: 4px 2px 10px; }
+.cqr-root .cq-carousel__track::-webkit-scrollbar { display: none; }
+.cqr-root .cq-carousel__arrow { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #d9d2c6; background: #fff; color: var(--cq-ink); display: grid; place-items: center; cursor: pointer; transition: border-color .18s, background-color .18s; }
+.cqr-root .cq-carousel__arrow:hover { border-color: var(--cq-gold); color: var(--cq-gold); }
+.cqr-root .cq-carousel__arrow[disabled] { opacity: .35; cursor: default; }
+
+/* ---------------- Reviews (matches the theme section) ---------------- */
+.cq-previews__layout { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: center; }
+@media (min-width: 990px) { .cq-previews__layout { grid-template-columns: auto minmax(220px, 300px) minmax(0, 1fr); gap: 36px; } }
+.cq-previews__title { margin: 0 0 10px; font-size: clamp(20px, 2.4vw, 26px); font-weight: 700; }
+.cq-previews__score { display: flex; align-items: center; gap: 10px; }
+.cq-previews__avg { font-size: 42px; font-weight: 700; line-height: 1; }
+.cq-previews__stars { margin-top: 0; }
+.cq-previews__based { margin: 6px 0 0; font-size: 13px; color: var(--cq-muted, #6d6d6d); }
+.cq-previews__bars { display: flex; flex-direction: column; gap: 7px; }
+.cq-previews__bar-row { display: grid; grid-template-columns: 34px 1fr 36px; align-items: center; gap: 10px; font-size: 12.5px; }
+.cq-previews__bar-label { display: inline-flex; align-items: center; gap: 2px; color: var(--cq-muted, #6d6d6d); }
+.cq-previews__bar { height: 7px; background: var(--cq-line, #ebe4da); border-radius: 999px; overflow: hidden; }
+.cq-previews__bar span { display: block; height: 100%; background: var(--cq-gold, #b8892b); border-radius: 999px; transition: width .3s ease; }
+.cq-previews__bar-pct { text-align: right; color: var(--cq-muted, #6d6d6d); }
+.cq-previews__list { position: relative; min-width: 0; padding-inline: 0; }
+@media (min-width: 750px) { .cq-previews__list { padding-inline: 44px; } }
+.cq-previews__track { gap: 12px; }
+.cq-preview { flex: 0 0 100%; scroll-snap-align: start; background: #fff; border: 1px solid var(--cq-line, #ebe4da); border-radius: 10px; padding: 16px 18px; box-shadow: var(--cq-shadow, 0 6px 18px rgba(40,30,10,.08)); }
+.cq-preview__head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.cq-preview__avatar { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #e7ded1; display: grid; place-items: center; font-weight: 700; color: #7a6a52; flex: 0 0 auto; }
+.cq-preview__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cq-preview__who { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cq-preview__who strong { font-size: 14px; font-weight: 600; }
+.cq-preview__verified { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #1f8a4c; background: #e8f5ec; padding: 2px 7px; border-radius: 999px; width: fit-content; }
+.cq-preview__date { margin-left: auto; font-size: 11.5px; color: var(--cq-muted, #6d6d6d); white-space: nowrap; }
+.cq-preview__text { margin: 0 0 4px; font-size: 13.5px; line-height: 1.55; color: #3d3d3d; }
+.cq-previews__arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; }
+.cq-previews__arrow--prev { left: 0; }
+.cq-previews__arrow--next { right: 0; }
+@media (max-width: 749px) { .cq-previews__arrow { display: none; } }
+.cq-previews__note { margin: 14px 0 0; font-size: 12.5px; color: var(--cq-muted, #6d6d6d); }
+
+/* Widget-only extras */
+.cqr-write { margin-top: 16px; }
+.cqr__photos { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.cqr__photos img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; }
+.cqr__reply { margin-top: 10px; padding: 10px 12px; background: var(--cq-cream, #faf6f0); border-radius: 8px; }
+.cqr__reply strong { display: block; font-size: 11.5px; margin-bottom: 3px; color: var(--cq-gold, #b8892b); }
+.cqr__reply p { margin: 0; font-size: 13px; line-height: 1.5; color: #4a4a4a; }
+
+/* ---------------- Modal ---------------- */
+.cqr__modal { position: fixed; inset: 0; z-index: 2147483000; display: none; --cqr-accent: #b8892b; --cqr-star: #f5a623; }
+.cqr__modal.is-open { display: block; }
+.cqr__overlay { position: absolute; inset: 0; background: rgba(20, 14, 4, .55); }
+.cqr__panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 14px; padding: 28px 26px 26px; box-shadow: 0 24px 60px rgba(0, 0, 0, .3); }
+.cqr__x { position: absolute; top: 12px; right: 14px; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #f4f1ec; font-size: 22px; line-height: 1; color: #555; cursor: pointer; }
+.cqr__x:hover { background: #e9e4dc; color: #111; }
+.cqr__panel h3 { margin: 0 0 20px; font-size: 20px; font-weight: 700; color: #1f1f1f; }
+.cqr__panel label { display: block; font-size: 13px; font-weight: 600; color: #1f1f1f; margin-bottom: 16px; }
+.cqr__panel input[type="text"],
+.cqr__panel input[type="email"],
+.cqr__panel textarea {
+  display: block; width: 100%; margin-top: 6px;
+  font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.5; color: #1f1f1f;
+  padding: 12px 14px; border: 1px solid #ddd5c8 !important; border-radius: 8px;
+  background: #fff; box-shadow: none; appearance: none; -webkit-appearance: none; box-sizing: border-box;
+}
+.cqr__panel input[type="text"]:focus,
+.cqr__panel input[type="email"]:focus,
+.cqr__panel textarea:focus { outline: none; border-color: var(--cqr-accent) !important; }
+.cqr__panel input::placeholder, .cqr__panel textarea::placeholder { color: #a39a8c; opacity: 1; }
+.cqr__panel textarea { resize: vertical; min-height: 110px; }
+.cqr__row { display: grid; grid-template-columns: 1fr; gap: 0 14px; }
+@media (min-width: 520px) { .cqr__row { grid-template-columns: 1fr 1fr; } }
+.cqr__hp { position: absolute !important; left: -9999px !important; }
+.cqr__rate { border: 0; padding: 0; margin: 0 0 18px; }
+.cqr__rate legend { font-size: 13px; font-weight: 600; color: #1f1f1f; padding: 0; margin-bottom: 8px; }
+.cqr__rate-stars { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 6px; }
+.cqr__rate-stars input { position: absolute !important; opacity: 0; width: 1px; height: 1px; }
+.cqr__rate-stars label { display: inline-block; margin: 0; font-size: 32px; line-height: 1; cursor: pointer; color: #ded7cc; transition: color .12s ease, transform .12s ease; }
+.cqr__rate-stars input:checked ~ label,
+.cqr__rate-stars label:hover,
+.cqr__rate-stars label:hover ~ label { color: var(--cqr-star); }
+.cqr__rate-stars label:hover { transform: scale(1.08); }
+.cqr__file { font-size: 13px; font-weight: 600; }
+.cqr__file input[type="file"] { display: block; margin-top: 6px; font-size: 13px; font-weight: 400; }
+.cqr__previews { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.cqr__previews img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; }
+.cqr__submit { display: block; width: 100%; margin-top: 4px; border: 0; border-radius: 8px; background: var(--cqr-accent); color: #fff; font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1; padding: 16px; cursor: pointer; appearance: none; -webkit-appearance: none; }
+.cqr__submit:hover { filter: brightness(.94); }
+.cqr__submit:disabled { opacity: .6; cursor: default; }
+.cqr__msg { font-size: 13.5px; padding: 11px 13px; border-radius: 7px; margin: 0 0 14px; }
+.cqr__msg.is-ok { color: #1f8a4c; background: #e8f5ec; }
+.cqr__msg.is-error { color: #d7263d; background: #fdecee; }
+
+/* Rating badge block */
+.cqr-badge { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; font-size: 13px; }
+.cqr-badge__stars span { color: #e8e2d8; }
+.cqr-badge__stars span.is-on { color: var(--cqr-star, #f5a623); }
+
+/* ---------------- Empty state ----------------
+   With no reviews the score, bars and arrows say nothing, so the layout drops
+   to a single centred column with one clear action. */
+.cqr-is-empty .cq-previews__layout { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 0; }
+.cqr-is-empty .cq-previews__bars { display: none; }
+.cqr-is-empty .cq-previews__summary { display: none; }
+.cqr-is-empty .cq-previews__list { padding-inline: 0; width: 100%; }
+.cqr-is-empty .cq-previews__track { display: block; overflow: visible; padding: 0; }
+
+.cqr-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px 20px 52px; }
+.cqr-empty__icon { color: #d9cfbe; line-height: 0; }
+.cqr-empty h3 { margin: 4px 0 0; font-size: clamp(20px, 2.4vw, 26px); font-weight: 700; color: var(--cq-ink, #1f1f1f); }
+.cqr-empty p { margin: 0 0 8px; font-size: 14px; color: var(--cq-muted, #6d6d6d); max-width: 38ch; }

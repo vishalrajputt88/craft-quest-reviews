@@ -1,0 +1,132 @@
+// Craft Quest Reviews — multi-tenant schema
+// Every table carries `shop` so one install can never see another store's data.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Neon: pooled URL above, direct URL here for migrations
+}
+
+// Written by @shopify/shopify-app-session-storage-prisma. Do not rename.
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  SPAM
+  REJECTED
+}
+
+model Review {
+  id          String       @id @default(cuid())
+  shop        String // tenant key — filter EVERY query by this
+  productId   String // Shopify numeric product id, as a string
+  productTitle String?
+  productHandle String?
+
+  rating      Int // 1..5
+  title       String?
+  body        String       @db.Text
+  authorName  String
+  authorEmail String?
+
+  verified    Boolean      @default(false) // matched to a real paid order
+  orderId     String?
+  status      ReviewStatus @default(PENDING)
+
+  images      ReviewImage[]
+  reply       String?      @db.Text // merchant's public response
+  repliedAt   DateTime?
+
+  helpfulCount Int         @default(0)
+  ipHash      String? // hashed, for rate limiting — never store raw IPs
+  locale      String?
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([shop, productId, status])
+  @@index([shop, status, createdAt])
+  @@index([shop, createdAt])
+}
+
+model ReviewImage {
+  id       String @id @default(cuid())
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  url      String
+  width    Int?
+  height   Int?
+
+  @@index([reviewId])
+}
+
+// Cached aggregate per product, so the storefront never has to COUNT() live.
+model ProductStats {
+  shop        String
+  productId   String
+  average     Float  @default(0)
+  count       Int    @default(0)
+  star1       Int    @default(0)
+  star2       Int    @default(0)
+  star3       Int    @default(0)
+  star4       Int    @default(0)
+  star5       Int    @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@id([shop, productId])
+  @@index([shop])
+}
+
+// Per-store settings, created on install.
+model ShopSettings {
+  shop             String   @id
+  autoPublish      Boolean  @default(false)
+  requireVerified  Boolean  @default(false)
+  allowImages      Boolean  @default(true)
+  maxImages        Int      @default(3)
+  requestEmails    Boolean  @default(false)
+  requestDelayDays Int      @default(7)
+  brandColor       String   @default("#b8892b")
+  installedAt      DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// Post-purchase review invitations.
+model ReviewRequest {
+  id         String   @id @default(cuid())
+  shop       String
+  orderId    String
+  productId  String
+  email      String
+  token      String   @unique // one-click link into the review form
+  sendAt     DateTime
+  sentAt     DateTime?
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@unique([shop, orderId, productId])
+  @@index([shop, sendAt, sentAt])
+}
