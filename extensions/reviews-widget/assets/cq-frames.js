@@ -111,8 +111,8 @@
       var s = sw.style;
       var chip = s.swatch && s.swatch.url
         ? "background:center/cover url('" + esc(s.swatch.url) + "')"
-        : s.png ? "background:center/cover url('" + esc(s.png.url) + "')"
-        : "background:" + (s.css && s.css.face || s.swatch.color);
+        : s.png && s.png.url ? "background:center/cover url('" + esc(s.png.url) + "')"
+        : "background:" + ((s.css && s.css.face) || (s.swatch && s.swatch.color) || "#ccc");
       return '<button type="button" class="cqf__swatch" role="radio" aria-checked="false" data-cqf-color="' + esc(sw.value) + '" title="' + esc(sw.value) + '">' +
         '<span class="cqf__chip" style="' + chip + '"></span>' +
         '<span class="cqf__swatch-name">' + esc(sw.value) + "</span></button>";
