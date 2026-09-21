@@ -23,7 +23,7 @@ api_version = "2026-10"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
- scopes = "read_products,write_products,read_orders,write_files,read_files"
+scopes = "read_products,write_products,read_orders,write_files,read_files"
 
 [auth]
 redirect_urls = [ "https://craft-quest-reviews.onrender.com/auth/callback" ]
