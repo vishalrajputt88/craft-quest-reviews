@@ -1,0 +1,11 @@
+In app/routes/app.tsx, find the <NavMenu> (or <ui-nav-menu>) block the CLI template
+generated and replace its links with:
+
+      <NavMenu>
+        <Link to="/app" rel="home">Home</Link>
+        <Link to="/app">Reviews</Link>
+        <Link to="/app/frames">Frames</Link>
+        <Link to="/app/settings">Settings</Link>
+      </NavMenu>
+
+(Delete the "Additional page" link — that route is template demo content.)

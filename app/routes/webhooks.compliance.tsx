@@ -35,6 +35,9 @@ export async function action({ request }: ActionFunctionArgs) {
       await prisma.productStats.deleteMany({ where: { shop } });
       await prisma.reviewRequest.deleteMany({ where: { shop } });
       await prisma.shopSettings.deleteMany({ where: { shop } });
+      await prisma.frameStyle.deleteMany({ where: { shop } });
+      await prisma.frameSet.deleteMany({ where: { shop } });
+      await prisma.frameSettings.deleteMany({ where: { shop } });
       await prisma.session.deleteMany({ where: { shop } });
       break;
     }

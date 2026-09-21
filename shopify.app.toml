@@ -2,13 +2,11 @@
 
 client_id = "69c6bb3518ea62888dc9e0cf6076ba88"
 name = "Craft Quest Reviews "
-application_url = "https://example.com"
+application_url = "https://craft-quest-reviews.onrender.com"
 embedded = true
 handle = "craft-quest-reviews"
 
 [build]
-include_config_on_deploy = true
-automatically_update_urls_on_dev = true
 dev_store_url = "thecraftquest.myshopify.com"
 
 [webhooks]
@@ -27,10 +25,10 @@ api_version = "2026-10"
 scopes = "read_products,write_products,read_orders"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://craft-quest-reviews.onrender.com/auth/callback" ]
 
 [app_proxy]
-url = "https://your-app.vercel.app/proxy"
+url = "https://craft-quest-reviews.onrender.com/proxy"
 subpath = "reviews"
 prefix = "apps"
 

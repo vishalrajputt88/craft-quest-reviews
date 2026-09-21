@@ -1,0 +1,92 @@
+/* Craft Quest Frames — storefront styles.
+   Self-contained and scoped under .cqf so it drops into any theme. */
+.cqf { --cqf-accent: #b8892b; --cqf-bg: #faf6f0; --cqf-line: #e8e1d6; --cqf-muted: #6d6d6d;
+  background: var(--cqf-bg); border-radius: 14px; padding: clamp(16px, 3vw, 28px); margin: 24px 0; color: inherit; font-family: inherit; }
+.cqf *, .cqf *::before, .cqf *::after { box-sizing: border-box; }
+.cqf[hidden] { display: none; }
+
+.cqf__head { margin-bottom: 18px; }
+.cqf__title { margin: 0; font-size: clamp(18px, 2.2vw, 24px); font-weight: 700; }
+.cqf__sub { margin: 4px 0 0; font-size: 13.5px; color: var(--cqf-muted); }
+
+.cqf__layout { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: start; }
+@media (min-width: 900px) { .cqf__layout--side { grid-template-columns: minmax(0, 1.3fr) minmax(240px, .7fr); gap: 32px; } }
+
+/* ---------- Stage ---------- */
+.cqf__stage { min-width: 0; }
+.cqf__room {
+  position: relative; display: grid; place-items: center;
+  aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; padding: 7%;
+  background: linear-gradient(180deg, #efe9e0 0%, #e6ded2 64%, #d8cfc1 64.1%, #cfc4b4 100%);
+}
+.cqf__room-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cqf--plain .cqf__room-img { display: none; }
+
+/* ---------- Frame ---------- */
+.cqf__frame {
+  position: relative; z-index: 2;
+  height: calc(var(--cqf-scale, 1) * 100%);
+  max-width: 100%; max-height: 100%;
+  aspect-ratio: 2 / 3;
+  border-style: solid; border-width: 0;
+  border-image-repeat: stretch;
+  filter: drop-shadow(4px 10px 14px rgba(60, 44, 24, .3));
+  transition: height .35s ease, aspect-ratio .35s ease, padding .3s ease, background .25s ease;
+}
+/* CSS-mode frames: bevel from shadows */
+.cqf__frame:not(.cqf__frame--png) {
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--cqf-edge, #0a0a0a), inset 2px 2px 4px rgba(255,255,255,.18), inset -2px -2px 5px rgba(0,0,0,.35);
+}
+
+.cqf__mat { width: 100%; height: 100%; transition: padding .3s ease, background .25s ease; }
+.cqf__mat.has-mat { box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), inset 3px 3px 7px rgba(0,0,0,.12); }
+
+.cqf__art { position: relative; width: 100%; height: 100%; overflow: hidden; background: #ded8cf; }
+.cqf__art-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cqf__art-placeholder { display: block; width: 100%; height: 100%; background: linear-gradient(160deg,#c9b79c,#7e6448 55%,#efe3cf); }
+.cqf__art::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(118deg, rgba(255,255,255,.26) 0%, rgba(255,255,255,.05) 28%, rgba(255,255,255,0) 46%); }
+
+.cqf__scale { position: absolute; right: 5%; bottom: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: .45; }
+.cqf__scale[hidden] { display: none; }
+.cqf__scale span { width: 24px; height: 72px; border-radius: 12px 12px 3px 3px; background: linear-gradient(180deg, #b9ab97, #9d8f7c); }
+.cqf__scale small { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #7a6a52; }
+@media (max-width: 599px) { .cqf__scale { display: none; } }
+
+.cqf__caption { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; color: var(--cqf-muted); }
+.cqf__toggle { border: 1px solid #d9d2c6; background: #fff; border-radius: 999px; padding: 6px 13px; font: inherit; font-size: 12.5px; cursor: pointer; color: inherit; }
+.cqf__toggle[hidden] { display: none; }
+.cqf__toggle[aria-pressed="true"] { border-color: var(--cqf-accent); color: var(--cqf-accent); }
+
+/* ---------- Controls ---------- */
+.cqf__controls { display: flex; flex-direction: column; gap: 20px; }
+.cqf__group[hidden] { display: none; }
+.cqf__label { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+.cqf__label strong { font-weight: 500; color: var(--cqf-muted); }
+
+.cqf__swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+.cqf__swatch { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 60px; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; font: inherit; }
+.cqf__chip { width: 44px; height: 44px; border-radius: 50%; transition: transform .16s ease, box-shadow .16s ease;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.14), inset 2px 2px 4px rgba(255,255,255,.2), inset -2px -2px 5px rgba(0,0,0,.28); }
+.cqf__swatch:hover .cqf__chip { transform: scale(1.06); }
+.cqf__swatch.is-active .cqf__chip { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--cqf-accent); }
+.cqf__swatch:focus-visible .cqf__chip { outline: 2px solid var(--cqf-accent); outline-offset: 3px; }
+.cqf__swatch-name { font-size: 11.5px; line-height: 1.2; text-align: center; color: var(--cqf-muted); }
+.cqf__swatch.is-active .cqf__swatch-name { color: inherit; font-weight: 600; }
+
+.cqf__sizes { display: flex; flex-wrap: wrap; gap: 8px; }
+.cqf__size { border: 1.5px solid #ddd5c8; background: #fff; border-radius: 8px; padding: 9px 13px; font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; color: inherit; transition: border-color .15s, background-color .15s; }
+.cqf__size:hover { border-color: var(--cqf-accent); }
+.cqf__size.is-active { border-color: var(--cqf-accent); background: #fdf8f0; font-weight: 600; }
+
+.cqf__buy { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--cqf-line); }
+.cqf__buy[hidden] { display: none; }
+.cqf__price { font-size: 20px; font-weight: 700; }
+.cqf__atc { border: 0; border-radius: 8px; background: var(--cqf-accent); color: #fff; font: inherit; font-size: 14.5px; font-weight: 600; padding: 13px 22px; cursor: pointer; }
+.cqf__atc:hover { filter: brightness(.94); }
+.cqf__atc:disabled { opacity: .55; cursor: default; }
+.cqf__msg { margin: 0; font-size: 13px; color: #d7263d; }
+.cqf__msg[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) { .cqf__frame, .cqf__mat, .cqf__chip { transition: none; } }

@@ -130,3 +130,87 @@ model ReviewRequest {
   @@unique([shop, orderId, productId])
   @@index([shop, sendAt, sentAt])
 }
+
+// ============================================================================
+// Frames module
+// ============================================================================
+
+enum FrameMode {
+  PNG // overlay image drawn with border-image (corners never stretch)
+  CSS // gradient recipe, for colours that don't have artwork yet
+}
+
+enum FrameRule {
+  ALL
+  COLLECTION
+  TAG
+  PRODUCT_TYPE
+  PRODUCT
+}
+
+// One frame finish: "Silver", "Chocolate", "Walnut"…
+model FrameStyle {
+  id          String    @id @default(cuid())
+  shop        String
+  name        String
+  // Variant option values that select this frame, e.g. ["Silver", "Chrome"].
+  matchValues String[]
+  mode        FrameMode @default(CSS)
+
+  // PNG mode — overlay stored in the merchant's own Shopify Files
+  overlayUrl    String?
+  overlayFileId String?
+  overlayWidth  Int?
+  overlayHeight Int?
+  // How much of the PNG, per side, is moulding (percent of the image).
+  sliceTop      Float @default(10)
+  sliceRight    Float @default(10)
+  sliceBottom   Float @default(10)
+  sliceLeft     Float @default(10)
+
+  // CSS mode recipe
+  face  String @default("linear-gradient(135deg,#2b2b2b,#141414 45%,#303030)")
+  edge  String @default("#0a0a0a")
+  inner String @default("#3a3a3a")
+
+  // Shared
+  thickness   Float   @default(5)   // moulding width, % of the frame's short side
+  matEnabled  Boolean @default(true)
+  matColor    String  @default("#f6f4ef")
+  matWidth    Float   @default(5)
+  swatchColor String  @default("#1c1c1c")
+  swatchUrl   String?
+
+  sort      Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shop, active, sort])
+}
+
+// A group of frame styles and the products it applies to.
+model FrameSet {
+  id         String    @id @default(cuid())
+  shop       String
+  name       String
+  styleIds   String[]  // ordered list of FrameStyle ids
+  rule       FrameRule @default(ALL)
+  ruleValues String[]  // collection handles / tags / product types / product ids
+  priority   Int       @default(0) // higher wins when several sets match
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([shop, active, priority])
+}
+
+model FrameSettings {
+  shop         String   @id
+  sizeOption   String   @default("Size")
+  colorOption  String   @default("Frame Colour")
+  roomImageUrl String?
+  showScale    Boolean  @default(true)
+  publishedAt  DateTime?
+  updatedAt    DateTime @updatedAt
+}
