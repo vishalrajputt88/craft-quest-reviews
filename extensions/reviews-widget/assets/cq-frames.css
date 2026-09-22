@@ -1,18 +1,47 @@
 /* Craft Quest Frames — storefront styles.
-   Self-contained and scoped under .cqf so it drops into any theme. */
+   Self-contained and scoped under .cqf so it drops into any theme.
+   .cqf itself is now just a small wrapper around the trigger button — all
+   the actual customizer UI lives inside the popup (.cqf-modal). */
 .cqf { --cqf-accent: #b8892b; --cqf-bg: #faf6f0; --cqf-line: #e8e1d6; --cqf-muted: #6d6d6d;
-  background: var(--cqf-bg); border-radius: 14px; padding: clamp(16px, 3vw, 28px); margin: 24px 0; color: inherit; font-family: inherit; }
+  display: inline-block; color: inherit; font-family: inherit; }
 .cqf *, .cqf *::before, .cqf *::after { box-sizing: border-box; }
 .cqf[hidden] { display: none; }
 
-.cqf__head { margin-bottom: 18px; }
+/* ---------- Trigger button (the only thing shown inline) ---------- */
+.cqf-trigger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; font: inherit; font-weight: 600; font-size: 14.5px; line-height: 1;
+  padding: 14px 20px; border-radius: 8px; border: 1.5px solid var(--cqf-accent);
+  background: #fff; color: var(--cqf-accent); cursor: pointer;
+  transition: background-color .18s ease, color .18s ease;
+}
+.cqf-trigger:hover { background: var(--cqf-accent); color: #fff; }
+
+/* ---------- Popup / modal ---------- */
+.cqf-modal { position: fixed; inset: 0; z-index: 2147483000; display: none; }
+.cqf-modal.is-open { display: block; }
+.cqf-modal__overlay { position: absolute; inset: 0; background: rgba(20, 14, 4, .55); }
+.cqf-modal__panel {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(720px, 94vw); max-height: 90vh; overflow-y: auto;
+  background: var(--cqf-bg); border-radius: 16px; padding: clamp(20px, 3vw, 32px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+}
+.cqf-modal__x {
+  position: absolute; top: 14px; right: 16px; width: 34px; height: 34px; padding: 0;
+  border: 0; border-radius: 50%; background: rgba(255,255,255,.7); font-size: 22px;
+  line-height: 1; color: #555; cursor: pointer;
+}
+.cqf-modal__x:hover { background: rgba(255,255,255,.95); color: #111; }
+
+.cqf-modal__head { margin: 0 34px 18px 0; }
 .cqf__title { margin: 0; font-size: clamp(18px, 2.2vw, 24px); font-weight: 700; }
 .cqf__sub { margin: 4px 0 0; font-size: 13.5px; color: var(--cqf-muted); }
 
-.cqf__layout { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: start; }
-@media (min-width: 900px) { .cqf__layout--side { grid-template-columns: minmax(0, 1.3fr) minmax(240px, .7fr); gap: 32px; } }
+.cqf-modal__body { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: start; }
+@media (min-width: 640px) { .cqf-modal__body { grid-template-columns: minmax(0, 1.15fr) minmax(220px, .85fr); gap: 32px; } }
 
-/* ---------- Stage ---------- */
+/* ---------- Stage (preview image) ---------- */
 .cqf__stage { min-width: 0; }
 .cqf__room {
   position: relative; display: grid; place-items: center;
@@ -33,7 +62,6 @@
   filter: drop-shadow(4px 10px 14px rgba(60, 44, 24, .3));
   transition: height .35s ease, aspect-ratio .35s ease, padding .3s ease, background .25s ease;
 }
-/* CSS-mode frames: bevel from shadows */
 .cqf__frame:not(.cqf__frame--png) {
   border-radius: 3px;
   box-shadow: inset 0 0 0 1px var(--cqf-edge, #0a0a0a), inset 2px 2px 4px rgba(255,255,255,.18), inset -2px -2px 5px rgba(0,0,0,.35);
@@ -59,19 +87,29 @@
 .cqf__toggle[hidden] { display: none; }
 .cqf__toggle[aria-pressed="true"] { border-color: var(--cqf-accent); color: var(--cqf-accent); }
 
-/* ---------- Controls ---------- */
-.cqf__controls { display: flex; flex-direction: column; gap: 20px; }
+/* ---------- Controls (right side of the popup) ---------- */
+.cqf__controls { display: flex; flex-direction: column; gap: 18px; }
 .cqf__group[hidden] { display: none; }
 .cqf__label { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
-.cqf__label strong { font-weight: 500; color: var(--cqf-muted); }
+.cqf__label strong { font-weight: 500; color: var(--cqf-muted); margin-left: 4px; }
+.cqf__label strong[hidden] { display: none; }
 
-.cqf__swatches { display: flex; flex-wrap: wrap; gap: 12px; }
-.cqf__swatch { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 60px; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; font: inherit; }
-.cqf__chip { width: 44px; height: 44px; border-radius: 50%; transition: transform .16s ease, box-shadow .16s ease;
+.cqf__swatches { display: flex; flex-wrap: wrap; gap: 14px; }
+.cqf__swatch { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 56px; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; font: inherit; }
+.cqf__chip { position: relative; width: 44px; height: 44px; border-radius: 50%; transition: transform .16s ease, box-shadow .16s ease;
   box-shadow: 0 0 0 1px rgba(0,0,0,.14), inset 2px 2px 4px rgba(255,255,255,.2), inset -2px -2px 5px rgba(0,0,0,.28); }
 .cqf__swatch:hover .cqf__chip { transform: scale(1.06); }
 .cqf__swatch.is-active .cqf__chip { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--cqf-accent); }
 .cqf__swatch:focus-visible .cqf__chip { outline: 2px solid var(--cqf-accent); outline-offset: 3px; }
+/* Checkmark badge on the selected swatch, like the target design */
+.cqf__swatch::before {
+  content: ""; position: absolute; top: -2px; left: 50%; width: 20px; height: 20px;
+  transform: translateX(-50%) scale(0); border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 2px var(--cqf-accent); opacity: 0; transition: transform .15s ease, opacity .15s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b8892b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center; background-size: 12px;
+}
+.cqf__swatch.is-active::before { transform: translateX(-50%) scale(1); opacity: 1; }
 .cqf__swatch-name { font-size: 11.5px; line-height: 1.2; text-align: center; color: var(--cqf-muted); }
 .cqf__swatch.is-active .cqf__swatch-name { color: inherit; font-weight: 600; }
 
@@ -80,13 +118,33 @@
 .cqf__size:hover { border-color: var(--cqf-accent); }
 .cqf__size.is-active { border-color: var(--cqf-accent); background: #fdf8f0; font-weight: 600; }
 
-.cqf__buy { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--cqf-line); }
+.cqf__hint { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12.5px; color: var(--cqf-muted); }
+
+.cqf__buy { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--cqf-line); }
 .cqf__buy[hidden] { display: none; }
-.cqf__price { font-size: 20px; font-weight: 700; }
-.cqf__atc { border: 0; border-radius: 8px; background: var(--cqf-accent); color: #fff; font: inherit; font-size: 14.5px; font-weight: 600; padding: 13px 22px; cursor: pointer; }
-.cqf__atc:hover { filter: brightness(.94); }
-.cqf__atc:disabled { opacity: .55; cursor: default; }
+.cqf__price { font-size: 24px; font-weight: 700; }
+
+.cqf__apply {
+  display: block; width: 100%; border: 0; border-radius: 8px; background: var(--cqf-accent);
+  color: #fff; font: inherit; font-size: 15px; font-weight: 600; padding: 15px; cursor: pointer;
+}
+.cqf__apply:hover { filter: brightness(.94); }
+.cqf__apply:disabled { opacity: .55; cursor: default; }
+
+.cqf__cancel {
+  display: block; width: 100%; text-align: center; border: 0; background: none;
+  font: inherit; font-size: 13.5px; color: var(--cqf-muted); text-decoration: underline;
+  cursor: pointer; padding: 2px;
+}
+
 .cqf__msg { margin: 0; font-size: 13px; color: #d7263d; }
 .cqf__msg[hidden] { display: none; }
 
-@media (prefers-reduced-motion: reduce) { .cqf__frame, .cqf__mat, .cqf__chip { transition: none; } }
+/* ---------- Feature strip (footer of the popup) ---------- */
+.cqf-modal__features {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 24px;
+  list-style: none; margin: 22px 0 0; padding: 16px 0 0; border-top: 1px solid var(--cqf-line);
+}
+.cqf-modal__features li { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--cqf-muted); }
+
+@media (prefers-reduced-motion: reduce) { .cqf__frame, .cqf__mat, .cqf__chip, .cqf__swatch::before { transition: none; } }

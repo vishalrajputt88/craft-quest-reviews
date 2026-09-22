@@ -1,22 +1,9 @@
 /* Craft Quest Frames — storefront renderer.
    Theme-agnostic: resolves which frames apply to this product from the
    published config, draws them (PNG via border-image, or CSS), and keeps the
-   theme's product form in sync so its own price and buy button follow. */
+   theme's product form in sync so its own price and buy button follow.
+   UI: a small "Preview" button opens a popup with the live customizer. */
 (function () {
-  // App embeds render near the end of <body> by default. Move this embed's
-  // markup into the product info column (right side, above the title/price
-  // blocks) so it behaves like a built-in part of that section instead of a
-  // block the merchant has to place by hand.
-  function reposition() {
-    var embed = document.querySelector("[data-cqf-embed]");
-    var target = document.querySelector(".cq-pdp__info");
-    if (embed && target && embed.parentElement !== target) {
-      target.insertBefore(embed, target.firstChild);
-    }
-  }
-  reposition();
-  document.addEventListener("shopify:section:load", reposition);
-
   document.querySelectorAll("[data-cqf]").forEach(init);
 
   function init(root) {
@@ -104,7 +91,7 @@
     var q = function (s) { return root.querySelector(s); };
     var frame = q("[data-cqf-frame]"), mat = q("[data-cqf-mat]"), art = q("[data-cqf-art]");
     var caption = q("[data-cqf-caption]"), priceEl = q("[data-cqf-price]"), buy = q("[data-cqf-buy]");
-    var atc = q("[data-cqf-atc]"), msg = q("[data-cqf-msg]");
+    var msg = q("[data-cqf-msg]");
     var roomImg = q("[data-cqf-room-img]"), toggle = q("[data-cqf-toggle]"), scaleEl = q("[data-cqf-scale]");
 
     if (settings.roomImageUrl) {
@@ -120,7 +107,9 @@
 
     /* ---------- 5. Controls ---------- */
     var colorsWrap = q("[data-cqf-colors]");
-    q("[data-cqf-color-label]").textContent = (colorIdx > -1 ? product.options[colorIdx] : "Frame") + ":";
+    // No colon / current-value repeated in the label — each swatch already
+    // shows its own name underneath, matching the target design.
+    q("[data-cqf-color-label]").textContent = colorIdx > -1 ? product.options[colorIdx] : "Frame Colour";
     colorsWrap.querySelector(".cqf__swatches").innerHTML = swatches.map(function (sw) {
       var s = sw.style;
       var chip = s.swatch && s.swatch.url
@@ -201,7 +190,8 @@
       // Measure after the size change has laid out, then draw the moulding.
       requestAnimationFrame(function () { applyStyle(sw.style, dim); });
 
-      q("[data-cqf-color-current]").textContent = state.color;
+      var currentEl = q("[data-cqf-color-current]");
+      if (currentEl) currentEl.textContent = state.color;
       caption.textContent = [state.color, state.size].filter(Boolean).join(" · ");
 
       root.querySelectorAll("[data-cqf-color]").forEach(function (b) {
@@ -216,16 +206,8 @@
       });
 
       var v = currentVariant();
-      if (v) {
-        buy.hidden = false;
-        priceEl.textContent = money(v.price);
-        if (atc) { atc.disabled = !v.available; atc.textContent = v.available ? root.dataset.atcLabel : "Sold out"; }
-        if (v.featured_image && art) art.src = v.featured_image.src;
-      } else {
-        buy.hidden = false;
-        priceEl.textContent = "Not available";
-        if (atc) atc.disabled = true;
-      }
+      buy.hidden = false;
+      priceEl.textContent = v ? money(v.price) : "Not available";
     }
 
     /* ---------- 7. Sync with the theme's product form ---------- */
@@ -284,8 +266,27 @@
       if (id) pullFromVariantId(id);
     });
 
-    /* ---------- 8. Interactions ---------- */
+    /* ---------- 8. Popup open/close ---------- */
+    var modal = q("[data-cqf-modal]");
+    function openModal() {
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+    }
+    function closeModal() {
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      document.documentElement.style.overflow = "";
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+    });
+
+    /* ---------- 9. Interactions ---------- */
     root.addEventListener("click", function (e) {
+      if (e.target.closest("[data-cqf-open]")) { openModal(); return; }
+      if (e.target.closest("[data-cqf-close]")) { closeModal(); return; }
+
       var c = e.target.closest("[data-cqf-color]");
       if (c) { state.color = c.dataset.cqfColor; render(); pushToTheme(currentVariant()); return; }
       var s = e.target.closest("[data-cqf-size]");
@@ -295,37 +296,13 @@
         toggle.setAttribute("aria-pressed", plain ? "false" : "true");
         return;
       }
-      if (e.target.closest("[data-cqf-atc]")) addToCart();
+      if (e.target.closest("[data-cqf-apply]")) {
+        // Selection is already synced live on every click above; Apply just
+        // confirms it and closes the popup.
+        pushToTheme(currentVariant());
+        closeModal();
+      }
     });
-
-    function addToCart() {
-      var v = currentVariant();
-      if (!v || !v.available) return;
-      var root_ = (window.Shopify && Shopify.routes && Shopify.routes.root) || "/";
-      atc.disabled = true;
-      atc.textContent = "Adding…";
-      fetch(root_ + "cart/add.js", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] })
-      })
-        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-        .then(function (res) {
-          if (!res.ok || res.j.status) throw new Error(res.j.description || "Could not add to cart");
-          atc.textContent = "Added ✓";
-          // Let themes that listen for these refresh their cart UI
-          document.dispatchEvent(new CustomEvent("cart:refresh", { bubbles: true }));
-          document.dispatchEvent(new CustomEvent("cart:update", { bubbles: true, detail: { data: { source: "cq-frames", variantId: v.id } } }));
-          if (window.CQ && window.CQ.syncCart) window.CQ.syncCart(null);
-          if (window.CQ && window.CQ.openCart) window.CQ.openCart();
-          setTimeout(render, 1600);
-        })
-        .catch(function (err) {
-          msg.hidden = false;
-          msg.textContent = err.message;
-          render();
-        });
-    }
 
     // Redraw moulding thickness when the stage resizes
     if (window.ResizeObserver) {
