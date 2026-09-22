@@ -3,6 +3,20 @@
    published config, draws them (PNG via border-image, or CSS), and keeps the
    theme's product form in sync so its own price and buy button follow. */
 (function () {
+  // App embeds render near the end of <body> by default. Move this embed's
+  // markup into the product info column (right side, above the title/price
+  // blocks) so it behaves like a built-in part of that section instead of a
+  // block the merchant has to place by hand.
+  function reposition() {
+    var embed = document.querySelector("[data-cqf-embed]");
+    var target = document.querySelector(".cq-pdp__info");
+    if (embed && target && embed.parentElement !== target) {
+      target.insertBefore(embed, target.firstChild);
+    }
+  }
+  reposition();
+  document.addEventListener("shopify:section:load", reposition);
+
   document.querySelectorAll("[data-cqf]").forEach(init);
 
   function init(root) {

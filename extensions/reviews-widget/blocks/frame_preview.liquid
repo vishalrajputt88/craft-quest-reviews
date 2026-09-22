@@ -4,7 +4,7 @@
   renders with no requests to the app server. Works on any theme.
 {%- endcomment -%}
 {%- assign cfg = app.metafields.cq_frames.config.value -%}
-{%- if cfg != blank and product -%}
+{%- if cfg != blank and product and template contains 'product' -%}
   {{ 'cq-frames.css' | asset_url | stylesheet_tag }}
 
   {%- capture collection_handles -%}{%- for c in product.collections -%}{{ c.handle }}{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}{%- endcapture -%}
@@ -12,6 +12,7 @@
   <div
     class="cqf"
     data-cqf
+    data-cqf-embed
     data-show-atc="{{ block.settings.show_atc }}"
     data-atc-label="{{ block.settings.atc_label | escape }}"
     style="--cqf-accent: {{ block.settings.accent }}; --cqf-bg: {{ block.settings.bg }};"
@@ -99,7 +100,7 @@
 {% schema %}
 {
   "name": "Frame preview",
-  "target": "section",
+  "target": "body",
   "enabled_on": { "templates": ["product"] },
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "See it on your wall" },
