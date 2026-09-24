@@ -92,14 +92,74 @@
     var frame = q("[data-cqf-frame]"), mat = q("[data-cqf-mat]"), art = q("[data-cqf-art]");
     var caption = q("[data-cqf-caption]"), priceEl = q("[data-cqf-price]"), buy = q("[data-cqf-buy]");
     var msg = q("[data-cqf-msg]");
-    var roomImg = q("[data-cqf-room-img]"), toggle = q("[data-cqf-toggle]"), scaleEl = q("[data-cqf-scale]");
+    var room = q("[data-cqf-room]"), roomImg = q("[data-cqf-room-img]"), hang = q("[data-cqf-hang]");
+    var dimW = q("[data-cqf-dim-w]"), dimH = q("[data-cqf-dim-h]");
+    var sofa = q("[data-cqf-sofa]"), person = q("[data-cqf-person]");
 
+    // Merchant's room photo isn't to scale, so it's only used behind Close-up.
     if (settings.roomImageUrl) {
       roomImg.src = settings.roomImageUrl;
       roomImg.hidden = false;
-      toggle.hidden = false;
     }
-    if (settings.showScale) scaleEl.hidden = false;
+
+    /* ---------- Real-world wall (all maths in inches) ----------
+       The stage box is 4:3, so a wall H inches tall is H*4/3 inches wide and
+       1 inch is the same number of pixels both ways — everything is to scale. */
+    var WALL_FT = Math.min(12, Math.max(7, parseFloat(room.dataset.wallFt) || 9));
+    var WALL_H = WALL_FT * 12;
+    var WALL_W = WALL_H * 4 / 3;
+    var SOFA = { w: 84, h: 30 };      // a standard 3-seater, 7 ft wide
+    var PERSON = { w: 20, h: 66 };    // 5 ft 6 in
+    var showSofa = room.dataset.sofa === "true";
+    var showPerson = room.dataset.person === "true";
+    var view = "wall";
+
+    function pctW(inches) { return (inches / WALL_W * 100) + "%"; }
+    function pctH(inches) { return (inches / WALL_H * 100) + "%"; }
+    function ftIn(inches) {
+      var ft = Math.floor(inches / 12), inch = Math.round(inches - ft * 12);
+      if (inch === 12) { ft++; inch = 0; }
+      return ft + " ft" + (inch ? " " + inch + " in" : "");
+    }
+    function cm(inches) { return Math.round(inches * 2.54); }
+    function num(n) { return String(Math.round(n * 10) / 10); }
+
+    q("[data-cqf-wall-chip]").textContent = "Wall " + ftIn(WALL_W) + " wide \u00d7 " + ftIn(WALL_H) + " high";
+
+    var ruler = q("[data-cqf-ruler]");
+    var ticks = "";
+    for (var t = 6; t < WALL_H; t += 6) {
+      var major = t % 12 === 0;
+      ticks += '<i class="' + (major ? "is-major" : "") + '" style="bottom:' + pctH(t) + '">' +
+        (major ? "<span>" + (t / 12) + " ft</span>" : "") + "</i>";
+    }
+    ruler.innerHTML = ticks;
+
+    if (showSofa) {
+      sofa.removeAttribute("hidden");
+      sofa.style.width = pctW(SOFA.w);
+      sofa.style.height = pctH(SOFA.h);
+    }
+    if (showPerson) {
+      person.removeAttribute("hidden");
+      var px0 = showSofa ? WALL_W / 2 + SOFA.w / 2 + 8 : WALL_W * 0.78;
+      px0 = Math.min(px0, WALL_W - PERSON.w - 4);
+      person.style.left = pctW(px0);
+      person.style.width = pctW(PERSON.w);
+      person.style.height = pctH(PERSON.h);
+    }
+
+    // Something everyone can picture, by longest side
+    function compare(w, h) {
+      var a = Math.max(w, h), b = Math.min(w, h);
+      if (a <= 7) return "about the size of a postcard";
+      if (a <= 12.5 && b <= 9) return "about the size of an A4 sheet";
+      if (a <= 17.5 && b <= 12.5) return "about the size of an A3 sheet";
+      if (a <= 24.5 && b <= 18) return "about the size of an A2 poster";
+      if (a <= 36.5 && b <= 25) return "about the size of an A1 poster";
+      if (a <= 48) return "a large statement piece";
+      return "an extra-large statement piece";
+    }
 
     function esc(s) {
       return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; });
@@ -126,7 +186,9 @@
       var sizesWrap = q("[data-cqf-sizes]");
       q("[data-cqf-size-label]").textContent = product.options[sizeIdx];
       sizesWrap.querySelector(".cqf__sizes").innerHTML = sizes.map(function (sz) {
-        return '<button type="button" class="cqf__size" role="radio" aria-checked="false" data-cqf-size="' + esc(sz) + '">' + esc(sz) + "</button>";
+        return '<button type="button" class="cqf__size" role="radio" aria-checked="false" data-cqf-size="' + esc(sz) + '">' + esc(sz) +
+          (function () { var d = parseSize(sz); return d ? "<small>" + cm(d.w) + " \u00d7 " + cm(d.h) + " cm</small>" : ""; })() +
+          "</button>";
       }).join("");
       sizesWrap.hidden = false;
     }
@@ -134,10 +196,12 @@
     /* ---------- 6. Render ---------- */
     function parseSize(label) {
       var m = String(label || "").match(/(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)/i);
-      return m ? { w: parseFloat(m[1]), h: parseFloat(m[2]) } : null;
+      if (!m) return null;
+      var w = parseFloat(m[1]), h = parseFloat(m[2]), unit = String(label).toLowerCase();
+      // Sizes are inches unless the label says cm / mm / ft
+      var f = /\bcm\b|centimet/.test(unit) ? 1 / 2.54 : /\bmm\b/.test(unit) ? 1 / 25.4 : /\bft\b|feet|foot/.test(unit) ? 12 : 1;
+      return { w: w * f, h: h * f };
     }
-    var maxSide = 0;
-    sizes.forEach(function (s) { var d = parseSize(s); if (d) maxSide = Math.max(maxSide, d.w, d.h); });
 
     function money(cents) {
       var fmt = (window.Shopify && window.Shopify.money_format) || "{{amount}}";
@@ -150,7 +214,7 @@
       // Moulding width in px = thickness % of the frame's short side.
       var box = frame.getBoundingClientRect();
       var shortSide = Math.min(box.width, box.height) || 300;
-      var px = Math.max(4, Math.round(shortSide * ((s.thickness || 5) / 100)));
+      var px = Math.max(2, Math.round(shortSide * ((s.thickness || 5) / 100)));
 
       if (s.png && s.png.url) {
         frame.classList.add("cqf__frame--png");
@@ -181,18 +245,31 @@
 
     function render() {
       var sw = swatches.filter(function (x) { return x.value === state.color; })[0] || swatches[0];
-      var dim = parseSize(state.size) || { w: 2, h: 3 };
-      var longest = Math.max(dim.w, dim.h);
-      var scale = maxSide ? Math.max(0.4, longest / maxSide) : 1;
+      var real = parseSize(state.size);
+      var dim = real || { w: 16, h: 24 };
 
-      frame.style.aspectRatio = dim.w + " / " + dim.h;
-      frame.style.setProperty("--cqf-scale", scale.toFixed(3));
+      // True size: inches on the wall. Close-up: same shape, blown up to fit.
+      var k = view === "close" ? Math.min(0.78 * WALL_H / dim.h, 0.8 * WALL_W / dim.w) : 1;
+      hang.style.width = pctW(dim.w * k);
+      hang.style.height = pctH(dim.h * k);
+      dimW.innerHTML = "<b>" + num(dim.w) + " in</b>";
+      dimH.innerHTML = "<b>" + num(dim.h) + " in</b>";
       // Measure after the size change has laid out, then draw the moulding.
-      requestAnimationFrame(function () { applyStyle(sw.style, dim); });
+      setTimeout(function () { applyStyle(sw.style, dim); }, 420);
 
       var currentEl = q("[data-cqf-color-current]");
       if (currentEl) currentEl.textContent = state.color;
-      caption.textContent = [state.color, state.size].filter(Boolean).join(" · ");
+      if (real) {
+        var ftTxt = Math.max(dim.w, dim.h) >= 24 ? ", " + ftIn(dim.w) + " \u00d7 " + ftIn(dim.h) : "";
+        caption.innerHTML = "<strong>" + esc(state.color) + " frame, " + num(dim.w) + " \u00d7 " + num(dim.h) + " in</strong> (" +
+          cm(dim.w) + " \u00d7 " + cm(dim.h) + " cm" + ftTxt + "), " + compare(dim.w, dim.h) + ". " +
+          (view === "close"
+            ? "Close-up is not to scale. Switch to True size to see it on the wall."
+            : "Drawn to scale on a " + ftIn(WALL_W) + " \u00d7 " + ftIn(WALL_H) + " wall" +
+              (showSofa ? " above a 7 ft sofa" : "") + ".");
+      } else {
+        caption.textContent = [state.color, state.size].filter(Boolean).join(", ");
+      }
 
       root.querySelectorAll("[data-cqf-color]").forEach(function (b) {
         var on = b.dataset.cqfColor === state.color;
@@ -272,6 +349,7 @@
       modal.classList.add("is-open");
       modal.setAttribute("aria-hidden", "false");
       document.documentElement.style.overflow = "hidden";
+      render();
     }
     function closeModal() {
       modal.classList.remove("is-open");
@@ -291,9 +369,16 @@
       if (c) { state.color = c.dataset.cqfColor; render(); pushToTheme(currentVariant()); return; }
       var s = e.target.closest("[data-cqf-size]");
       if (s) { state.size = s.dataset.cqfSize; render(); pushToTheme(currentVariant()); return; }
-      if (e.target.closest("[data-cqf-toggle]")) {
-        var plain = root.classList.toggle("cqf--plain");
-        toggle.setAttribute("aria-pressed", plain ? "false" : "true");
+      var vb = e.target.closest("[data-cqf-view]");
+      if (vb) {
+        view = vb.dataset.cqfView;
+        root.classList.toggle("cqf--close", view === "close");
+        root.querySelectorAll("[data-cqf-view]").forEach(function (b) {
+          var on = b === vb;
+          b.classList.toggle("is-active", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        render();
         return;
       }
       if (e.target.closest("[data-cqf-apply]")) {

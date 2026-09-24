@@ -92,3 +92,11 @@ Allow `SHOP_REDACT` webhook to process without admin context
 ## v2024.07.16
 
 Started tracking changes and releases using calver
+
+## Frame preview: true-size wall
+- The preview stage is now a real-scale wall (default 12 ft × 9 ft, set by "Wall height shown" in the block settings). Every size is converted from inches to the wall, so 8×12 and 24×36 look exactly as big as they will in a room.
+- Frame is always centred in the stage (fixes it sliding to the bottom and getting clipped).
+- Width/height measurement lines on the frame, a foot ruler on the wall, and a 7 ft sofa + 5 ft 6 in person for scale (each can be turned off).
+- Size buttons show cm under the inch label; caption gives cm/ft and an A4/A3/A2/A1 comparison.
+- New "Close-up" toggle for seeing the art in detail (merchant room photo, if uploaded, shows here since it isn't to scale).
+- Size labels in cm/mm/ft are understood as well as inches.

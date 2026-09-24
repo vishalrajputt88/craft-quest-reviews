@@ -36,34 +36,64 @@
 
         <div class="cqf-modal__body">
           <div class="cqf__stage">
-            <div class="cqf__room" data-cqf-room>
+            <div
+              class="cqf__room"
+              data-cqf-room
+              data-wall-ft="{{ block.settings.wall_height_ft }}"
+              data-sofa="{{ block.settings.show_sofa }}"
+              data-person="{{ block.settings.show_person }}"
+            >
               <img class="cqf__room-img" data-cqf-room-img alt="" hidden>
-              <div class="cqf__frame" data-cqf-frame>
-                <div class="cqf__mat" data-cqf-mat>
-                  <div class="cqf__art">
-                    {%- assign art = product.selected_or_first_available_variant.featured_image | default: product.featured_image -%}
-                    {%- if art -%}
-                      <img
-                        class="cqf__art-img"
-                        data-cqf-art
-                        src="{{ art | image_url: width: 1000 }}"
-                        srcset="{{ art | image_url: width: 500 }} 500w, {{ art | image_url: width: 800 }} 800w, {{ art | image_url: width: 1000 }} 1000w"
-                        sizes="(min-width: 750px) 40vw, 80vw"
-                        alt="{{ product.title | escape }}"
-                        loading="lazy"
-                      >
-                    {%- else -%}
-                      <span class="cqf__art-placeholder"></span>
-                    {%- endif -%}
+              <div class="cqf__wall-chip" data-cqf-wall-chip></div>
+              <div class="cqf__ruler" data-cqf-ruler aria-hidden="true"></div>
+
+              {%- comment -%} Real-size references, drawn in inches (viewBox = inches) {%- endcomment -%}
+              <svg class="cqf__ref cqf__ref--sofa" data-cqf-sofa viewBox="0 0 84 30" preserveAspectRatio="none" aria-hidden="true" hidden>
+                <rect x="4" y="0" width="76" height="17" rx="3" fill="#8b7a66"/>
+                <rect x="0" y="9" width="10" height="17" rx="3" fill="#7a6a57"/>
+                <rect x="74" y="9" width="10" height="17" rx="3" fill="#7a6a57"/>
+                <rect x="8" y="14" width="68" height="10" rx="2" fill="#9a8a75"/>
+                <line x1="42" y1="14" x2="42" y2="24" stroke="#86755f" stroke-width=".6"/>
+                <rect x="3" y="25" width="78" height="2.5" fill="#6b5c4b"/>
+                <rect x="6" y="27" width="2" height="3" fill="#4a3f33"/>
+                <rect x="76" y="27" width="2" height="3" fill="#4a3f33"/>
+              </svg>
+              <svg class="cqf__ref cqf__ref--person" data-cqf-person viewBox="0 0 20 66" preserveAspectRatio="none" aria-hidden="true" hidden>
+                <path fill="#a2927d" d="M10 0a4.2 4.2 0 1 1 0 8.4A4.2 4.2 0 0 1 10 0zM6.4 10h7.2c2.4 0 4 1.7 4.3 4l1.6 14.5c.2 1.4-1.9 1.7-2.2.3l-1.9-11.8v47.6c0 1.9-3 1.9-3 0V37h-.8v27.6c0 1.9-3 1.9-3 0V17l-1.9 11.8c-.3 1.4-2.4 1.1-2.2-.3L2.1 14C2.4 11.7 4 10 6.4 10z"/>
+              </svg>
+              <div class="cqf__baseboard" aria-hidden="true"></div>
+
+              <div class="cqf__hang" data-cqf-hang>
+                <span class="cqf__dim cqf__dim--w" data-cqf-dim-w></span>
+                <span class="cqf__dim cqf__dim--h" data-cqf-dim-h></span>
+                <div class="cqf__frame" data-cqf-frame>
+                  <div class="cqf__mat" data-cqf-mat>
+                    <div class="cqf__art">
+                      {%- assign art = product.selected_or_first_available_variant.featured_image | default: product.featured_image -%}
+                      {%- if art -%}
+                        <img
+                          class="cqf__art-img"
+                          data-cqf-art
+                          src="{{ art | image_url: width: 1000 }}"
+                          srcset="{{ art | image_url: width: 500 }} 500w, {{ art | image_url: width: 800 }} 800w, {{ art | image_url: width: 1000 }} 1000w"
+                          sizes="(min-width: 750px) 40vw, 80vw"
+                          alt="{{ product.title | escape }}"
+                          loading="lazy"
+                        >
+                      {%- else -%}
+                        <span class="cqf__art-placeholder"></span>
+                      {%- endif -%}
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="cqf__scale" data-cqf-scale hidden><span></span><small>Scale</small></div>
+
+              <div class="cqf__view" role="group" aria-label="Preview mode">
+                <button type="button" class="cqf__view-btn is-active" data-cqf-view="wall" aria-pressed="true">True size</button>
+                <button type="button" class="cqf__view-btn" data-cqf-view="close" aria-pressed="false">Close-up</button>
+              </div>
             </div>
-            <div class="cqf__caption">
-              <span data-cqf-caption></span>
-              <button type="button" class="cqf__toggle" data-cqf-toggle hidden aria-pressed="true">Room view</button>
-            </div>
+            <p class="cqf__caption" data-cqf-caption></p>
           </div>
 
           <div class="cqf__controls">
@@ -144,6 +174,10 @@
     { "type": "text", "id": "cancel_label", "label": "Cancel label", "default": "Cancel" },
     { "type": "text", "id": "features", "label": "Feature strip (comma separated)", "default": "Visualize before you buy, Perfect for every space, Bring art to life" },
     { "type": "text", "id": "feature_icons", "label": "Feature icons (comma separated, Iconify names)", "default": "mdi:image-frame, mdi:home-outline, mdi:heart-outline" },
+    { "type": "header", "content": "True-size wall" },
+    { "type": "range", "id": "wall_height_ft", "label": "Wall height shown (floor to ceiling)", "min": 7, "max": 12, "step": 1, "unit": "ft", "default": 9, "info": "The wall is drawn at real scale. Width follows at 4:3 (9 ft high = 12 ft wide)." },
+    { "type": "checkbox", "id": "show_sofa", "label": "Show a 7 ft sofa for scale", "default": true },
+    { "type": "checkbox", "id": "show_person", "label": "Show a 5 ft 6 in person for scale", "default": true },
     { "type": "color", "id": "accent", "label": "Accent colour", "default": "#b8892b" },
     { "type": "color", "id": "bg", "label": "Background", "default": "#faf6f0" }
   ]
