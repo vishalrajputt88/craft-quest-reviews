@@ -108,3 +108,4 @@ Started tracking changes and releases using calver
 - Add to Cart and Buy Now inside the popup. Add to Cart uses the theme's own button so the cart drawer and counter update; Buy Now goes straight to checkout.
 - Colour/size clicks only change the preview; Apply commits the variant to the page. Fires a `cqf:apply` event that themes can listen to (`data-cqf-listener`).
 - Product art now always fills the frame, even when the theme sets `img { height: auto }`.
+- Popup art now follows the image picked in the product gallery (any number of images). Falls back to the variant's image, then the first image.

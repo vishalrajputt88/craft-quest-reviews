@@ -465,12 +465,65 @@
       if (id) pullFromVariantId(id);
     });
 
+    /* ---------- Art image follows the gallery ----------
+       The customer may have picked any image in the theme's gallery; the
+       popup shows that one. Order: active gallery slide → variant image →
+       whatever Liquid rendered. */
+    var media = [];
+    try { media = JSON.parse(root.querySelector("[data-cqf-media]").textContent) || []; } catch (e) {}
+    var mediaById = {};
+    media.forEach(function (m) { mediaById[String(m.id)] = m; });
+
+    var ACTIVE_SELECTORS = [
+      "[data-cq-slide].is-active[data-media-id]",          // Craft Quest theme
+      ".product__media-item.is-active[data-media-id]",     // Dawn & friends
+      "[data-media-id].is-active",
+      "[data-media-id].is-selected",
+      "[data-media-id][aria-current=\"true\"]",
+      "[data-media-id].active",
+      ".swiper-slide-active[data-media-id]",
+      ".slick-current[data-media-id]"
+    ];
+    function mediaIdOf(el) {
+      // Some themes use "sectionId-12345" — take the trailing number
+      var m = String(el.getAttribute("data-media-id") || "").match(/(\d+)\s*$/);
+      return m ? m[1] : null;
+    }
+    function activeGalleryMediaId() {
+      for (var i = 0; i < ACTIVE_SELECTORS.length; i++) {
+        var els = document.querySelectorAll(ACTIVE_SELECTORS[i]);
+        for (var j = 0; j < els.length; j++) {
+          if (root.contains(els[j])) continue;
+          var id = mediaIdOf(els[j]);
+          if (id && mediaById[id]) return id;
+        }
+      }
+      return null;
+    }
+    function setArt(m) {
+      if (!art || !m) return;
+      if (art.getAttribute("data-cqf-art-id") === String(m.id)) return;
+      art.setAttribute("data-cqf-art-id", String(m.id));
+      art.removeAttribute("loading");
+      art.srcset = m.srcset || "";
+      art.src = m.src;
+    }
+    function syncArt() {
+      var id = activeGalleryMediaId();
+      if (!id) {
+        var v = currentVariant();
+        if (v && v.featured_media && mediaById[String(v.featured_media.id)]) id = String(v.featured_media.id);
+      }
+      if (id) setArt(mediaById[id]);
+    }
+
     /* ---------- 8. Popup open/close ---------- */
     var modal = q("[data-cqf-modal]");
     function openModal() {
       modal.classList.add("is-open");
       modal.setAttribute("aria-hidden", "false");
       document.documentElement.style.overflow = "hidden";
+      syncArt();
       render();
     }
     function closeModal() {

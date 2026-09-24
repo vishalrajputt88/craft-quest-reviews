@@ -180,6 +180,22 @@
       </div>
     </div>
 
+    {%- comment -%} Every product image, so the popup can show whichever one the customer picked in the gallery {%- endcomment -%}
+    <script type="application/json" data-cqf-media>
+      [
+        {%- for m in product.media -%}
+          {%- if m.preview_image -%}
+            {%- capture m_srcset -%}{{ m.preview_image | image_url: width: 500 }} 500w, {{ m.preview_image | image_url: width: 800 }} 800w, {{ m.preview_image | image_url: width: 1000 }} 1000w{%- endcapture -%}
+            {%- unless forloop.first -%},{%- endunless -%}
+            {
+              "id": {{ m.id | json }},
+              "src": {{ m.preview_image | image_url: width: 1000 | json }},
+              "srcset": {{ m_srcset | json }}
+            }
+          {%- endif -%}
+        {%- endfor -%}
+      ]
+    </script>
     <script type="application/json" data-cqf-block>
       {
         "orientationProperty": {% if block.settings.orientation_property %}{{ block.settings.orientation_label | default: 'Orientation' | json }}{% else %}null{% endif %},
