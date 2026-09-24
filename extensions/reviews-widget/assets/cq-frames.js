@@ -18,6 +18,8 @@
     if (!cfg || !cfg.styles || !cfg.styles.length) { root.hidden = true; return; }
 
     var settings = cfg.settings || {};
+    var blockCfg = {};
+    try { blockCfg = JSON.parse(root.querySelector("[data-cqf-block]").textContent) || {}; } catch (e) {}
     var lower = function (s) { return String(s == null ? "" : s).toLowerCase().trim(); };
 
     /* ---------- 1. Which set applies to this product ---------- */
@@ -79,10 +81,18 @@
     };
     if (!swatches.some(function (s) { return s.value === state.color; })) state.color = swatches[0].value;
 
+    // Every other product option (mat, glass, finish…) so the customer can
+    // pick a full variant from the popup.
+    var extraIdx = [];
+    (product.options || []).forEach(function (_, i) { if (i !== sizeIdx && i !== colorIdx) extraIdx.push(i); });
+    state.extra = {};
+    extraIdx.forEach(function (i) { state.extra[i] = start ? start.options[i] : uniq(i)[0]; });
+
     function currentVariant() {
       return variants.filter(function (v) {
         if (sizeIdx > -1 && v.options[sizeIdx] !== state.size) return false;
         if (colorIdx > -1 && v.options[colorIdx] !== state.color) return false;
+        for (var j = 0; j < extraIdx.length; j++) if (v.options[extraIdx[j]] !== state.extra[extraIdx[j]]) return false;
         return true;
       })[0] || null;
     }
@@ -108,10 +118,24 @@
     var WALL_FT = Math.min(12, Math.max(7, parseFloat(room.dataset.wallFt) || 9));
     var WALL_H = WALL_FT * 12;
     var WALL_W = WALL_H * 4 / 3;
+    // Real room photo: the merchant tells us how wide the wall in it is; the
+    // stage takes the photo's own aspect ratio so nothing is cropped.
+    var photoFt = parseFloat(room.dataset.photoFt);
+    var photoRatio = parseFloat(room.dataset.photoRatio);
+    var hasPhoto = !!(photoFt && photoRatio);
+    var hangX = 50, hangY = 50;
+    if (hasPhoto) {
+      WALL_W = photoFt * 12;
+      WALL_H = WALL_W / photoRatio;
+      hangX = parseFloat(room.dataset.hangX) || 50;
+      hangY = parseFloat(room.dataset.hangY) || 40;
+    }
+    hang.style.left = hangX + "%";
+    hang.style.top = hangY + "%";
     var SOFA = { w: 84, h: 30 };      // a standard 3-seater, 7 ft wide
     var PERSON = { w: 20, h: 66 };    // 5 ft 6 in
-    var showSofa = room.dataset.sofa === "true";
-    var showPerson = room.dataset.person === "true";
+    var showSofa = !hasPhoto && room.dataset.sofa === "true";
+    var showPerson = !hasPhoto && room.dataset.person === "true";
     var view = "wall";
 
     function pctW(inches) { return (inches / WALL_W * 100) + "%"; }
@@ -124,11 +148,13 @@
     function cm(inches) { return Math.round(inches * 2.54); }
     function num(n) { return String(Math.round(n * 10) / 10); }
 
-    q("[data-cqf-wall-chip]").textContent = "Wall " + ftIn(WALL_W) + " wide \u00d7 " + ftIn(WALL_H) + " high";
+    q("[data-cqf-wall-chip]").textContent = hasPhoto
+      ? "Wall shown about " + ftIn(WALL_W) + " wide"
+      : "Wall " + ftIn(WALL_W) + " wide \u00d7 " + ftIn(WALL_H) + " high";
 
     var ruler = q("[data-cqf-ruler]");
     var ticks = "";
-    for (var t = 6; t < WALL_H; t += 6) {
+    for (var t = 6; !hasPhoto && t < WALL_H; t += 6) {
       var major = t % 12 === 0;
       ticks += '<i class="' + (major ? "is-major" : "") + '" style="bottom:' + pctH(t) + '">' +
         (major ? "<span>" + (t / 12) + " ft</span>" : "") + "</i>";
@@ -193,6 +219,30 @@
       sizesWrap.hidden = false;
     }
 
+    var extraWrap = q("[data-cqf-extra]");
+    extraWrap.innerHTML = extraIdx.map(function (i) {
+      var vals = uniq(i);
+      if (vals.length < 2) return "";
+      return '<div class="cqf__group"><p class="cqf__label">' + esc(product.options[i]) + '</p><div class="cqf__sizes" role="radiogroup">' +
+        vals.map(function (v) {
+          return '<button type="button" class="cqf__size" role="radio" aria-checked="false" data-cqf-extra-idx="' + i + '" data-cqf-extra-val="' + esc(v) + '">' + esc(v) + "</button>";
+        }).join("") + "</div></div>";
+    }).join("");
+
+    // Orientation: only offered when at least one size isn't square
+    var orientWrap = q("[data-cqf-orient-wrap]");
+    var anyRect = sizes.some(function (sz) { var d = parseSize(sz); return d && d.w !== d.h; });
+    var firstDim = parseSize(state.size);
+    state.orient = firstDim && firstDim.w > firstDim.h ? "landscape" : "portrait";
+    if (orientWrap && anyRect) orientWrap.hidden = false;
+    var canOrient = !!(orientWrap && anyRect);
+
+    function oriented(d) {
+      if (!d || !canOrient) return d;
+      var a = Math.min(d.w, d.h), b = Math.max(d.w, d.h);
+      return state.orient === "landscape" ? { w: b, h: a } : { w: a, h: b };
+    }
+
     /* ---------- 6. Render ---------- */
     function parseSize(label) {
       var m = String(label || "").match(/(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)/i);
@@ -245,11 +295,13 @@
 
     function render() {
       var sw = swatches.filter(function (x) { return x.value === state.color; })[0] || swatches[0];
-      var real = parseSize(state.size);
+      var real = oriented(parseSize(state.size));
       var dim = real || { w: 16, h: 24 };
 
       // True size: inches on the wall. Close-up: same shape, blown up to fit.
       var k = view === "close" ? Math.min(0.78 * WALL_H / dim.h, 0.8 * WALL_W / dim.w) : 1;
+      hang.style.left = (view === "close" ? 50 : hangX) + "%";
+      hang.style.top = (view === "close" ? 50 : hangY) + "%";
       hang.style.width = pctW(dim.w * k);
       hang.style.height = pctH(dim.h * k);
       dimW.innerHTML = "<b>" + num(dim.w) + " in</b>";
@@ -282,39 +334,108 @@
         b.setAttribute("aria-checked", on ? "true" : "false");
       });
 
+      root.querySelectorAll("[data-cqf-extra-idx]").forEach(function (b) {
+        var on = state.extra[b.dataset.cqfExtraIdx] === b.dataset.cqfExtraVal;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-checked", on ? "true" : "false");
+      });
+      root.querySelectorAll("[data-cqf-orient]").forEach(function (b) {
+        var on = b.dataset.cqfOrient === state.orient;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-checked", on ? "true" : "false");
+      });
+
       var v = currentVariant();
+      var ok = !!(v && v.available !== false);
       buy.hidden = false;
       priceEl.textContent = v ? money(v.price) : "Not available";
+      [q("[data-cqf-apply]"), q("[data-cqf-add]"), q("[data-cqf-buynow]")].forEach(function (b) { if (b) b.disabled = !v || (b !== q("[data-cqf-apply]") && !ok); });
+      msg.hidden = ok || !v;
+      msg.textContent = v && !ok ? (blockCfg.soldOut || "Sold out") : "";
     }
 
     /* ---------- 7. Sync with the theme's product form ---------- */
     var syncing = false;
+    function productForms() {
+      return Array.prototype.filter.call(document.querySelectorAll('form[action*="/cart/add"]'), function (f) { return !root.contains(f); });
+    }
+    function orientationValue() {
+      return canOrient ? (state.orient === "landscape" ? "Landscape" : "Portrait") : null;
+    }
     function pushToTheme(v) {
       if (!v) return;
       syncing = true;
-      // Generic: every product form on the page carries the variant id here
-      document.querySelectorAll('form[action*="/cart/add"] [name="id"]').forEach(function (input) {
-        if (input.value !== String(v.id)) {
-          input.value = String(v.id);
-          input.dispatchEvent(new Event("change", { bubbles: true }));
+      var orient = orientationValue();
+
+      // Themes can listen for this and update their own picker precisely
+      // (the Craft Quest theme does — see sections/cq-product.liquid).
+      document.dispatchEvent(new CustomEvent("cqf:apply", { detail: { variant: v, orientation: orient } }));
+      var themeListens = !!document.querySelector("[data-cqf-listener]");
+
+      productForms().forEach(function (form) {
+        if (!themeListens) {
+          // Generic fallback: tick matching radios/selects inside the product form
+          v.options.forEach(function (val) {
+            Array.prototype.forEach.call(form.querySelectorAll('input[type="radio"]'), function (r) {
+              if (r.value === val && !r.checked) { r.checked = true; r.dispatchEvent(new Event("change", { bubbles: true })); }
+            });
+            Array.prototype.forEach.call(form.querySelectorAll("select"), function (sel) {
+              var has = Array.prototype.some.call(sel.options, function (o) { return o.value === val; });
+              if (has && sel.value !== val) { sel.value = val; sel.dispatchEvent(new Event("change", { bubbles: true })); }
+            });
+          });
+          Array.prototype.forEach.call(form.querySelectorAll('[name="id"]'), function (input) {
+            if (input.value !== String(v.id)) { input.value = String(v.id); input.dispatchEvent(new Event("change", { bubbles: true })); }
+          });
+        }
+        // Orientation rides along as a line item property
+        if (blockCfg.orientationProperty && orient) {
+          var name = "properties[" + blockCfg.orientationProperty + "]";
+          var p = form.querySelector('input[name="' + CSS.escape(name) + '"]');
+          if (!p) { p = document.createElement("input"); p.type = "hidden"; p.name = name; p.setAttribute("data-cqf-prop", ""); form.appendChild(p); }
+          p.value = orient;
         }
       });
-      // Themes that render option radios/selects: tick the matching values
-      [[sizeIdx, state.size], [colorIdx, state.color]].forEach(function (pair) {
-        if (pair[0] < 0) return;
-        document.querySelectorAll('input[type="radio"][value="' + CSS.escape(pair[1]) + '"]').forEach(function (r) {
-          if (!r.checked && !root.contains(r)) { r.checked = true; r.dispatchEvent(new Event("change", { bubbles: true })); }
-        });
-        document.querySelectorAll("select").forEach(function (sel) {
-          if (root.contains(sel)) return;
-          var opt = Array.prototype.filter.call(sel.options, function (o) { return o.value === pair[1]; })[0];
-          if (opt && sel.value !== pair[1]) { sel.value = pair[1]; sel.dispatchEvent(new Event("change", { bubbles: true })); }
-        });
-      });
+
       var url = new URL(location.href);
       url.searchParams.set("variant", v.id);
       history.replaceState(history.state, "", url);
-      setTimeout(function () { syncing = false; }, 50);
+      setTimeout(function () { syncing = false; }, 80);
+    }
+
+    function cartLine(v) {
+      var qtyInput = productForms().map(function (f) { return f.querySelector('[name="quantity"]'); }).filter(Boolean)[0];
+      var line = { id: v.id, quantity: Math.max(1, parseInt(qtyInput && qtyInput.value, 10) || 1) };
+      var orient = orientationValue();
+      if (blockCfg.orientationProperty && orient) { line.properties = {}; line.properties[blockCfg.orientationProperty] = orient; }
+      return line;
+    }
+    var rootUrl = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || "/";
+
+    function addToCart(v, thenCheckout) {
+      pushToTheme(v);
+      if (!thenCheckout) {
+        // Prefer the theme's own button so its cart drawer / counter update
+        var btn = productForms().map(function (f) { return f.querySelector('[type="submit"][name="add"], button[type="submit"]'); }).filter(Boolean)[0];
+        if (btn) {
+          closeModal();
+          setTimeout(function () { btn.disabled = false; btn.click(); }, 150);
+          return;
+        }
+      }
+      var buttons = root.querySelectorAll("[data-cqf-add], [data-cqf-buynow]");
+      buttons.forEach(function (b) { b.disabled = true; });
+      fetch(rootUrl + "cart/add.js", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ items: [cartLine(v)] })
+      }).then(function (r) {
+        if (!r.ok) return r.json().then(function (e) { throw new Error(e.description || e.message || "Could not add to cart"); });
+        location.href = rootUrl + (thenCheckout ? "checkout" : "cart");
+      }).catch(function (e) {
+        msg.textContent = e.message; msg.hidden = false;
+        buttons.forEach(function (b) { b.disabled = false; });
+      });
     }
 
     function pullFromVariantId(id) {
@@ -323,6 +444,7 @@
       if (!v) return;
       if (sizeIdx > -1) state.size = v.options[sizeIdx];
       if (colorIdx > -1 && swatches.some(function (s) { return s.value === v.options[colorIdx]; })) state.color = v.options[colorIdx];
+      extraIdx.forEach(function (i) { state.extra[i] = v.options[i]; });
       render();
     }
 
@@ -366,9 +488,15 @@
       if (e.target.closest("[data-cqf-close]")) { closeModal(); return; }
 
       var c = e.target.closest("[data-cqf-color]");
-      if (c) { state.color = c.dataset.cqfColor; render(); pushToTheme(currentVariant()); return; }
+      if (c) { state.color = c.dataset.cqfColor; render(); return; }
       var s = e.target.closest("[data-cqf-size]");
-      if (s) { state.size = s.dataset.cqfSize; render(); pushToTheme(currentVariant()); return; }
+      if (s) { state.size = s.dataset.cqfSize; render(); return; }
+      var ex = e.target.closest("[data-cqf-extra-idx]");
+      if (ex) { state.extra[ex.dataset.cqfExtraIdx] = ex.dataset.cqfExtraVal; render(); return; }
+      var ob = e.target.closest("[data-cqf-orient]");
+      if (ob) { state.orient = ob.dataset.cqfOrient; render(); return; }
+      if (e.target.closest("[data-cqf-add]")) { var va = currentVariant(); if (va) addToCart(va, false); return; }
+      if (e.target.closest("[data-cqf-buynow]")) { var vn = currentVariant(); if (vn) addToCart(vn, true); return; }
       var vb = e.target.closest("[data-cqf-view]");
       if (vb) {
         view = vb.dataset.cqfView;
@@ -382,8 +510,8 @@
         return;
       }
       if (e.target.closest("[data-cqf-apply]")) {
-        // Selection is already synced live on every click above; Apply just
-        // confirms it and closes the popup.
+        // Clicks inside the popup only change the preview; Apply commits the
+        // variant (and orientation) to the product page.
         pushToTheme(currentVariant());
         closeModal();
       }

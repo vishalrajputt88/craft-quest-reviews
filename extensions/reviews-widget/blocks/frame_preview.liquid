@@ -36,13 +36,31 @@
 
         <div class="cqf-modal__body">
           <div class="cqf__stage">
+            {%- assign room_photo = block.settings.room_image -%}
             <div
-              class="cqf__room"
+              class="cqf__room{% if room_photo %} cqf__room--photo{% endif %}"
               data-cqf-room
               data-wall-ft="{{ block.settings.wall_height_ft }}"
               data-sofa="{{ block.settings.show_sofa }}"
               data-person="{{ block.settings.show_person }}"
+              {%- if room_photo %}
+              data-photo-ft="{{ block.settings.room_width_ft }}"
+              data-photo-ratio="{{ room_photo.aspect_ratio }}"
+              data-hang-x="{{ block.settings.room_hang_x }}"
+              data-hang-y="{{ block.settings.room_hang_y }}"
+              style="aspect-ratio: {{ room_photo.aspect_ratio }};"
+              {%- endif %}
             >
+              {%- if room_photo -%}
+                <img
+                  class="cqf__photo"
+                  src="{{ room_photo | image_url: width: 1400 }}"
+                  srcset="{{ room_photo | image_url: width: 700 }} 700w, {{ room_photo | image_url: width: 1100 }} 1100w, {{ room_photo | image_url: width: 1400 }} 1400w"
+                  sizes="(min-width: 750px) 560px, 92vw"
+                  alt=""
+                  loading="lazy"
+                >
+              {%- endif -%}
               <img class="cqf__room-img" data-cqf-room-img alt="" hidden>
               <div class="cqf__wall-chip" data-cqf-wall-chip></div>
               <div class="cqf__ruler" data-cqf-ruler aria-hidden="true"></div>
@@ -107,6 +125,23 @@
               <div class="cqf__sizes" role="radiogroup"></div>
             </div>
 
+            {%- if block.settings.allow_landscape -%}
+            <div class="cqf__group" data-cqf-orient-wrap hidden>
+              <p class="cqf__label">Orientation</p>
+              <div class="cqf__orient" role="radiogroup" aria-label="Orientation">
+                <button type="button" class="cqf__orient-btn" role="radio" aria-checked="true" data-cqf-orient="portrait">
+                  <span class="cqf__orient-ico cqf__orient-ico--p" aria-hidden="true"></span>Portrait
+                </button>
+                <button type="button" class="cqf__orient-btn" role="radio" aria-checked="false" data-cqf-orient="landscape">
+                  <span class="cqf__orient-ico cqf__orient-ico--l" aria-hidden="true"></span>Landscape
+                </button>
+              </div>
+            </div>
+            {%- endif -%}
+
+            {%- comment -%} Any other product options (mat, glass, etc.) are drawn here {%- endcomment -%}
+            <div data-cqf-extra></div>
+
             <p class="cqf__hint">
               <iconify-icon icon="mdi:lightning-bolt-outline" width="14" height="14" class="cq-icon"></iconify-icon>
               {{ block.settings.hint_label }}
@@ -117,6 +152,12 @@
             </div>
 
             <button type="button" class="cqf__apply" data-cqf-apply>{{ block.settings.apply_label }}</button>
+            {%- if block.settings.show_cart_buttons -%}
+              <div class="cqf__cart-row">
+                <button type="button" class="cqf__cart-btn" data-cqf-add>{{ block.settings.add_label }}</button>
+                <button type="button" class="cqf__cart-btn cqf__cart-btn--dark" data-cqf-buynow>{{ block.settings.buy_label }}</button>
+              </div>
+            {%- endif -%}
             <button type="button" class="cqf__cancel" data-cqf-close>{{ block.settings.cancel_label }}</button>
 
             <p class="cqf__msg" data-cqf-msg hidden></p>
@@ -139,6 +180,12 @@
       </div>
     </div>
 
+    <script type="application/json" data-cqf-block>
+      {
+        "orientationProperty": {% if block.settings.orientation_property %}{{ block.settings.orientation_label | default: 'Orientation' | json }}{% else %}null{% endif %},
+        "soldOut": {{ block.settings.sold_label | json }}
+      }
+    </script>
     <script type="application/json" data-cqf-config>{{ cfg | json }}</script>
     <script type="application/json" data-cqf-product>
       {
@@ -177,7 +224,22 @@
     { "type": "header", "content": "True-size wall" },
     { "type": "range", "id": "wall_height_ft", "label": "Wall height shown (floor to ceiling)", "min": 7, "max": 12, "step": 1, "unit": "ft", "default": 9, "info": "The wall is drawn at real scale. Width follows at 4:3 (9 ft high = 12 ft wide)." },
     { "type": "checkbox", "id": "show_sofa", "label": "Show a 7 ft sofa for scale", "default": true },
-    { "type": "checkbox", "id": "show_person", "label": "Show a 5 ft 6 in person for scale", "default": true },
+    { "type": "checkbox", "id": "show_person", "label": "Show a 5 ft 6 in person for scale", "default": false },
+    { "type": "header", "content": "Real room photo" },
+    { "type": "paragraph", "content": "Upload a straight-on photo of a living-room wall (e.g. above a sofa). It replaces the drawn wall and frames are drawn to scale on it." },
+    { "type": "image_picker", "id": "room_image", "label": "Room photo" },
+    { "type": "range", "id": "room_width_ft", "label": "Real width of the wall in the photo", "min": 6, "max": 30, "step": 1, "unit": "ft", "default": 14, "info": "A 3-seater sofa is about 7 ft wide. If the sofa covers half the photo's width, enter 14." },
+    { "type": "range", "id": "room_hang_x", "label": "Frame centre, from left", "min": 10, "max": 90, "step": 1, "unit": "%", "default": 50 },
+    { "type": "range", "id": "room_hang_y", "label": "Frame centre, from top", "min": 10, "max": 80, "step": 1, "unit": "%", "default": 38 },
+    { "type": "header", "content": "Orientation" },
+    { "type": "checkbox", "id": "allow_landscape", "label": "Let customers pick portrait or landscape", "default": true },
+    { "type": "checkbox", "id": "orientation_property", "label": "Save the choice on the order (line item property)", "default": true },
+    { "type": "text", "id": "orientation_label", "label": "Property name", "default": "Orientation" },
+    { "type": "header", "content": "Buy from the popup" },
+    { "type": "checkbox", "id": "show_cart_buttons", "label": "Show Add to Cart and Buy Now in the popup", "default": true },
+    { "type": "text", "id": "add_label", "label": "Add to cart label", "default": "Add to Cart" },
+    { "type": "text", "id": "buy_label", "label": "Buy now label", "default": "Buy Now" },
+    { "type": "text", "id": "sold_label", "label": "Sold out label", "default": "Sold out" },
     { "type": "color", "id": "accent", "label": "Accent colour", "default": "#b8892b" },
     { "type": "color", "id": "bg", "label": "Background", "default": "#faf6f0" }
   ]

@@ -100,3 +100,11 @@ Started tracking changes and releases using calver
 - Size buttons show cm under the inch label; caption gives cm/ft and an A4/A3/A2/A1 comparison.
 - New "Close-up" toggle for seeing the art in detail (merchant room photo, if uploaded, shows here since it isn't to scale).
 - Size labels in cm/mm/ft are understood as well as inches.
+
+## Frame preview: room photo, orientation, buy from popup
+- Real room photo (block setting): frames are drawn to scale on it using "Real width of the wall in the photo" and a hang point. The drawn wall stays as the fallback. Person silhouette now off by default.
+- Portrait / Landscape toggle; the choice is saved on the order as a line item property (name configurable).
+- Every product option is now selectable in the popup (not just size and colour), sold-out variants disable the buy buttons.
+- Add to Cart and Buy Now inside the popup. Add to Cart uses the theme's own button so the cart drawer and counter update; Buy Now goes straight to checkout.
+- Colour/size clicks only change the preview; Apply commits the variant to the page. Fires a `cqf:apply` event that themes can listen to (`data-cqf-listener`).
+- Product art now always fills the frame, even when the theme sets `img { height: auto }`.

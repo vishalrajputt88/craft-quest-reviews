@@ -56,6 +56,16 @@
 .cqf__room-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .3s ease; }
 .cqf--close .cqf__room-img:not([hidden]) { opacity: 1; }
 
+/* Real room photo */
+.cqf__room--photo { aspect-ratio: auto; }
+.cqf .cqf__room > .cqf__photo {
+  position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important;
+  max-width: none !important; margin: 0 !important; object-fit: fill !important; z-index: 0;
+}
+.cqf__room--photo .cqf__baseboard, .cqf__room--photo .cqf__ruler { display: none; }
+.cqf--close .cqf__room--photo .cqf__photo { filter: blur(6px) brightness(1.05); transform: scale(1.06); }
+.cqf__room--photo .cqf__hang { filter: drop-shadow(0 8px 10px rgba(30, 20, 8, .35)); }
+
 .cqf__baseboard { position: absolute; left: 0; right: 0; bottom: 0; height: 3.7%; background: #d9cfc0; box-shadow: 0 -1px 0 #cbbfad; }
 
 /* Hanging box = the frame's real outer size. Always centred. */
@@ -78,7 +88,13 @@
 .cqf__mat { width: 100%; height: 100%; transition: padding .3s ease, background .25s ease; }
 .cqf__mat.has-mat { box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), inset 2px 2px 6px rgba(0,0,0,.12); }
 .cqf__art { position: relative; width: 100%; height: 100%; overflow: hidden; background: #ded8cf; }
-.cqf__art-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Locked down: themes often set img { height: auto } with higher specificity,
+   which left a gap under the art. */
+.cqf .cqf__art > .cqf__art-img {
+  position: absolute !important; inset: 0 !important; display: block !important;
+  width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important;
+  margin: 0 !important; object-fit: cover !important; object-position: center !important; border-radius: 0 !important;
+}
 .cqf__art-placeholder { display: block; width: 100%; height: 100%; background: linear-gradient(160deg,#c9b79c,#7e6448 55%,#efe3cf); }
 .cqf__art::after { content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(118deg, rgba(255,255,255,.26) 0%, rgba(255,255,255,.05) 28%, rgba(255,255,255,0) 46%); }
@@ -162,6 +178,23 @@
 .cqf__size:hover { border-color: var(--cqf-accent); }
 .cqf__size small { display: block; margin-top: 2px; font-size: 11px; font-weight: 400; color: var(--cqf-muted); }
 .cqf__size.is-active { border-color: var(--cqf-accent); background: #fdf8f0; font-weight: 600; }
+
+.cqf__orient { display: flex; gap: 8px; }
+.cqf__orient-btn { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid #ddd5c8; background: #fff; border-radius: 8px;
+  padding: 9px 14px; font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; color: inherit; }
+.cqf__orient-btn:hover { border-color: var(--cqf-accent); }
+.cqf__orient-btn.is-active { border-color: var(--cqf-accent); background: #fdf8f0; font-weight: 600; }
+.cqf__orient-ico { display: inline-block; border: 2px solid currentColor; border-radius: 2px; opacity: .7; }
+.cqf__orient-ico--p { width: 11px; height: 15px; }
+.cqf__orient-ico--l { width: 15px; height: 11px; }
+
+.cqf__cart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cqf__cart-btn { border: 1.5px solid var(--cqf-accent); background: #fff; color: var(--cqf-accent); border-radius: 8px;
+  padding: 13px 10px; font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+.cqf__cart-btn:hover { background: #fdf8f0; }
+.cqf__cart-btn--dark { background: #2b2418; border-color: #2b2418; color: #fff; }
+.cqf__cart-btn--dark:hover { background: #3c3222; }
+.cqf__cart-btn:disabled, .cqf__apply:disabled { opacity: .5; cursor: not-allowed; }
 
 .cqf__hint { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12.5px; color: var(--cqf-muted); }
 
